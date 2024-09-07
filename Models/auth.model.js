@@ -17,6 +17,9 @@ const authSchema = mongoose.Schema({
   profilePic: {
     type: String,
   },
+  cloudinary_id: {
+    type: String,
+  },
   isAdmin: {
     type: String,
     default: false,
