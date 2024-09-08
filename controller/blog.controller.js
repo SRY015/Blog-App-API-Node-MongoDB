@@ -1,6 +1,8 @@
 const Blog = require("../Models/blog.model");
 const User = require("../Models/auth.model");
 
+const cloudinary = require("../utils/cloudinary");
+
 // create new blog --->
 const createBlog = async (req, res) => {
   try {
@@ -63,6 +65,10 @@ const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
     if (blog && blog.email === req.body.email) {
+      // Delete image from cloudinary --->
+      if (blog.cloudinary_id) {
+        await cloudinary.uploader.destroy(blog.cloudinary_id);
+      }
       await Blog.findByIdAndDelete(req.params.id);
       res.status(200).json({
         success: true,
@@ -145,7 +151,14 @@ const getAllBlogs = async (req, res) => {
 // Delete blogs by emil --->
 const deleteBlogsByEmail = async (email) => {
   try {
-    await Blog.deleteMany({ email: email });
+    //await Blog.deleteMany({ email: email });
+    const blogs = await Blog.find({ email: email });
+    blogs.map(async (blog) => {
+      if (blog.cloudinary_id) {
+        cloudinary.uploader.destroy(blog.cloudinary_id);
+      }
+      await Blog.findByIdAndDelete(blog._id);
+    });
     return "Blogs are deleted for this email !!";
   } catch (error) {
     return error.message;

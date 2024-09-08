@@ -2,6 +2,7 @@ const User = require("../Models/auth.model");
 const bcrypt = require("bcrypt");
 const { deleteBlogsByEmail } = require("./blog.controller");
 const fs = require("fs");
+const cloudinary = require("../utils/cloudinary");
 
 // GET USER BY ID --->
 const getUserById = async (req, res) => {
@@ -36,6 +37,12 @@ const updateUser = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.password, salt);
     }
+    if (req.body.file) {
+      const currentUser = await User.findOne({ _id: req.params.id });
+      if (currentUser.user.cloudinary_id) {
+        await cloudinary.uploader.destroy(currentUser.user.cloudinary_id);
+      }
+    }
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
@@ -61,7 +68,7 @@ const deleteUser = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params.id });
     if (user.profilePic) {
-      fs.unlinkSync(__dirname + `/../Images/${user.profilePic}`);
+      cloudinary.uploader.destroy(user.cloudinary_id);
     }
     await deleteBlogsByEmail(user.email);
     await User.findByIdAndDelete(req.params.id);

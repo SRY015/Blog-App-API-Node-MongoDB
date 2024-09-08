@@ -13,6 +13,9 @@ const blogSchema = mongoose.Schema({
     type: String,
     require: true,
   },
+  cloudinary_id: {
+    type: String,
+  },
   category: {
     type: String,
     require: true,
